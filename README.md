@@ -1,0 +1,1 @@
+# Paradigmy_programmirovaniya
