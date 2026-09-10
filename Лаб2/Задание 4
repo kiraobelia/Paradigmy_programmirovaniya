@@ -1,1 +1,34 @@
+numbers = [12, 5, 8, 3, 21, 0, 14, -7]
 
+# Инициализация переменных состояния (накопители и счетчики)
+total_sum = 0
+positive_sum = 0
+positive_count = 0
+negative_count = 0
+zero_count = 0
+
+print("Отслеживание изменения total_sum по итерациям:")
+for number in numbers:
+    # 1. Сумма всех чисел
+    total_sum += number
+     
+    # 2. Сумма и количество положительных
+    if number > 0:
+        positive_sum += number
+        positive_count += 1
+    # 3. Количество отрицательных
+    elif number < 0:
+        negative_count += 1
+    # 4. Количество нулей
+    else:
+        zero_count += 1
+        
+    print(f"Число: {number:>2} | Текущая total_sum: {total_sum}")
+
+print("\n--- Итоговые результаты ---")
+print(f"Сумма всех чисел: {total_sum}")
+print(f"Сумма положительных чисел: {positive_sum}")
+print(f"Количество положительных чисел: {positive_count}")
+print(f"Количество отрицательных чисел: {negative_count}")
+print(f"Количество нулей: {zero_count}")
+ 
