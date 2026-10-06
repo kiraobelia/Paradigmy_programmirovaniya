@@ -24,3 +24,8 @@ def build_rating(students):
     """Возвращает рейтинг, не изменяя исходные записи."""
     results = [build_student_result(item) for item in students]
     return sorted(results, key=_sort_key, reverse=True)
+
+# --- Индивидуальное задание (Вариант 2) ---
+def filter_passed(rating):
+    """Возвращает только тех студентов, у которых статус 'допущен'."""
+    return [student for student in rating if student["status"] == "допущен"]
