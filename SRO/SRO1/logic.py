@@ -1,11 +1,8 @@
-"""
-Модуль бизнес-логики (Лекции 3, 6, 7, 8)
-"""
+
 from functools import reduce
 from datetime import datetime
 from models import Room, Booking
 
-# --- ЛЕКЦИЯ 7: Чистые функции (Pure Functions) ---
 
 def calculate_board_price(base_price: float, board_type: str, days: int) -> float:
     """Чистая функция: рассчитывает стоимость проживания с учетом питания."""
@@ -47,8 +44,6 @@ def find_next_available_day_recursive(start_date_str: str, occupied_dates: list,
     
     return find_next_available_day_recursive(start_date_str, occupied_dates, step + 1)
 
-
-# --- ЛЕКЦИЯ 6: Полиморфизм, Интерфейсы и Композиция ---
 
 class BaseAvailabilityPolicy:
     """Базовый класс политики доступности."""
@@ -97,8 +92,6 @@ class CompositeBookingChecker:
         return all(policy.is_satisfied(room, criteria) for policy in self.policies)
 
 
-# --- ЛЕКЦИЯ 8: Функции высшего порядка, замыкания и FP-конвейеры ---
-
 def make_discount_calculator(discount_percent: float):
     """Замыкание (Closure): создает функцию для расчета стоимости со скидкой."""
     def apply_discount(amount: float) -> float:
@@ -124,8 +117,6 @@ def calculate_total_revenue(bookings: list) -> float:
     prices = map(lambda b: b.total_price, confirmed_bookings)
     return reduce(lambda x, y: x + y, prices, 0.0)
 
-
-# --- ЛЕКЦИЯ 3: Процедурная декомпозиция (6 функций) ---
 
 def create_sample_rooms() -> list:
     """1. Создание исходных данных."""
