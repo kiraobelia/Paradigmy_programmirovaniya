@@ -1,40 +1,113 @@
-class Room:
-    """Класс, описывающий номер в отеле."""
-    def __init__(self, room_id: int, category: str, building: str, view_type: str, bed_type: str, base_price: float):
-        self.room_id = room_id
-        self.category = category        # 'LUX', 'FAMILY', 'STANDARD'
-        self.building = building        # 'MAIN', 'SIDE_WING'
-        self.view_type = view_type      # 'STREET', 'YARD', 'LAKE', 'SIDE'
-        self.bed_type = bed_type        # 'TWIN', 'DOUBLE'
-        self.base_price = base_price
+"""
+Точка входа (Лекции 1, 2, 4)
+"""
+from models import Room, Booking
+from logic import (
+    create_sample_rooms, filter_available_rooms, make_booking,
+    cancel_booking_by_id, get_hotel_occupancy_stats, format_booking_report,
+    filter_rooms_fp, calculate_total_revenue
+)
 
-    def __repr__(self):
-        return f"Комната #{self.room_id} [{self.category}] | Корпус: {self.building} | Вид: {self.view_type} | Кровати: {self.bed_type} | {self.base_price} тг/ночь"
+def demonstrate_paradigm_comparison(rooms):
+    """
+    Лекция 1: Сравнение способов отбора номеров (Императивный vs Функциональный)
+    """
+    print("\n--- ЛЕКЦИЯ 1: Сравнение парадигм программирования ---")
+    
+    # 1. Императивный подход
+    imp_result = []
+    for r in rooms:
+        if r.category == 'LUX' and r.view_type == 'LAKE':
+            imp_result.append(r)
+    print(f"Императивный подход (нашел): {len(imp_result)} шт.")
+
+    # 2. Функциональный подход (filter + lambda)
+    fp_result = list(filter(lambda r: r.category == 'LUX' and r.view_type == 'LAKE', rooms))
+    print(f"Функциональный подход (нашел): {len(fp_result)} шт.")
 
 
-class Booking:
-    """Класс бронирования с защищенными полями (инкапсуляция)."""
-    def __init__(self, booking_id: int, guest_name: str, room: Room, check_in: str, check_out: str, board_type: str, total_price: float):
-        self.booking_id = booking_id
-        self.guest_name = guest_name
-        self.room = room
-        # Приватные свойства для защиты состояния
-        self._check_in = check_in
-        self._check_out = check_out
-        self.board_type = board_type    # 'BREAKFAST', 'FULL_BOARD', 'NONE'
-        self.total_price = total_price
-        self.status = "CONFIRMED"       # 'CONFIRMED' или 'CANCELLED'
+def run_imperative_prototype():
+    """
+    Лекция 2: Рабочий императивный прототип (переменные, условия, циклы)
+    """
+    print("\n--- ЛЕКЦИЯ 2: Императивный прототип бронирования ---")
+    rooms_data = [
+        {"id": 1, "cat": "LUX", "price": 40000, "free": True},
+        {"id": 2, "cat": "STANDARD", "price": 15000, "free": True}
+    ]
+    
+    req_cat = "LUX"
+    found_id = -1
+    
+    i = 0
+    while i < len(rooms_data):
+        if rooms_data[i]["cat"] == req_cat and rooms_data[i]["free"]:
+            found_id = rooms_data[i]["id"]
+            rooms_data[i]["free"] = False
+            break
+        i += 1
+        
+    if found_id != -1:
+        print(f"[Успех] Номер #{found_id} забронирован через императивный прототип.")
+    else:
+        print("[Отказ] Нет свободных номеров.")
 
-    @property
-    def check_in(self):
-        return self._check_in
 
-    @property
-    def check_out(self):
-        return self._check_out
+def main():
+    print("==================================================")
+    print("   СИСТЕМА БРОНИРОВАНИЯ ОТЕЛЯ (Мини-проект по СРО)")
+    print("==================================================")
 
-    def cancel(self):
-        self.status = "CANCELLED"
+    # 1. Инициализация данных
+    rooms = create_sample_rooms()
+    bookings = []
+    
+    # Демонстрация лекций 1 и 2
+    demonstrate_paradigm_comparison(rooms)
+    run_imperative_prototype()
 
-    def __repr__(self):
-        return f"Бронь #{self.booking_id} ({self.guest_name}) | Комната #{self.room.room_id} | {self.check_in} - {self.check_out} | Питание: {self.board_type} | Сумма: {self.total_price} тг [{self.status}]"
+    # 2. Выполнение основного сценария бронирования (ООП + Политики)
+    print("\n--- Основной сценарий работы системы ---")
+    
+    # Заявка 1: Гость хочет Люкс с видом на озеро в Центральном корпусе
+    criteria_1 = {
+        'category': 'LUX',
+        'view_type': 'LAKE',
+        'building': 'MAIN',
+        'check_in': '2026-11-01',
+        'check_out': '2026-11-05'
+    }
+    
+    available_1 = filter_available_rooms(rooms, bookings, criteria_1)
+    if available_1:
+        b1 = make_booking(1, "Кирилл Бледный", available_1[0], '2026-11-01', '2026-11-05', 'FULL_BOARD', discount_rate=5.0)
+        bookings.append(b1)
+        print(f"Успешно создано: {b1}")
+    
+    # Заявка 2: Семейный номер, вид во двор, раздельные кровати
+    criteria_2 = {
+        'category': 'FAMILY',
+        'view_type': 'YARD',
+        'bed_type': 'TWIN',
+        'check_in': '2026-11-01',
+        'check_out': '2026-11-03'
+    }
+    
+    available_2 = filter_available_rooms(rooms, bookings, criteria_2)
+    if available_2:
+        b2 = make_booking(2, "Кайрат Нуртас", available_2[0], '2026-11-01', '2026-11-03', 'BREAKFAST')
+        bookings.append(b2)
+        print(f"Успешно создано: {b2}")
+
+    # 3. Печать отчета и статистики
+    print("\n" + format_booking_report(bookings))
+    
+    stats = get_hotel_occupancy_stats(rooms, bookings)
+    print(f"\nСтатистика загрузки отеля: {stats}")
+    
+    # Выручка через Лекцию 8 (FP pipeline)
+    revenue = calculate_total_revenue(bookings)
+    print(f"Общая подтвержденная выручка: {revenue} тг")
+
+if __name__ == "__main__":
+    main()
