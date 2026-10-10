@@ -1,46 +1,40 @@
-from typing import Protocol
+class Room:
+    """Класс, описывающий номер в отеле."""
+    def __init__(self, room_id: int, category: str, building: str, view_type: str, bed_type: str, base_price: float):
+        self.room_id = room_id
+        self.category = category        # 'LUX', 'FAMILY', 'STANDARD'
+        self.building = building        # 'MAIN', 'SIDE_WING'
+        self.view_type = view_type      # 'STREET', 'YARD', 'LAKE', 'SIDE'
+        self.bed_type = bed_type        # 'TWIN', 'DOUBLE'
+        self.base_price = base_price
+
+    def __repr__(self):
+        return f"Комната #{self.room_id} [{self.category}] | Корпус: {self.building} | Вид: {self.view_type} | Кровати: {self.bed_type} | {self.base_price} тг/ночь"
 
 
-class AvailabilityPolicy(Protocol):
-    """Интерфейс для проверки доступности бронирования"""
-    def check_availability(self, room: str, equipment: str) -> bool:
-        ...
-
-
-class Reservation:
-    """Сущность заявки на бронирование"""
-    def __init__(self, res_id: int, student_name: str, room: str, equipment: str) -> None:
-        if isinstance(res_id, bool) or not isinstance(res_id, int) or res_id <= 0:
-            raise ValueError("ID брони должен быть положительным числом")
-        if not student_name or not student_name.strip():
-            raise ValueError("Имя студента не может быть пустым")
-
-        self.res_id = res_id
-        self.student_name = student_name.strip()
+class Booking:
+    """Класс бронирования с защищенными полями (инкапсуляция)."""
+    def __init__(self, booking_id: int, guest_name: str, room: Room, check_in: str, check_out: str, board_type: str, total_price: float):
+        self.booking_id = booking_id
+        self.guest_name = guest_name
         self.room = room
-        self.equipment = equipment
+        # Приватные свойства для защиты состояния
+        self._check_in = check_in
+        self._check_out = check_out
+        self.board_type = board_type    # 'BREAKFAST', 'FULL_BOARD', 'NONE'
+        self.total_price = total_price
+        self.status = "CONFIRMED"       # 'CONFIRMED' или 'CANCELLED'
 
+    @property
+    def check_in(self):
+        return self._check_in
 
-class LaboratoryCalendar:
-    """Класс календаря бронирований (Композиция)"""
-    def __init__(self, policy: AvailabilityPolicy) -> None:
-        self._reservations: dict[int, Reservation] = {}
-        self.policy = policy  # Зависимость передается через конструктор
+    @property
+    def check_out(self):
+        return self._check_out
 
-    def add_reservation(self, reservation: Reservation) -> bool:
-        if reservation.res_id in self._reservations:
-            raise ValueError(f"Бронь с ID {reservation.res_id} уже существует")
-        
-        # Проверка через переданную политику
-        if self.policy.check_availability(reservation.room, reservation.equipment):
-            self._reservations[reservation.res_id] = reservation
-            return True
-        return False
+    def cancel(self):
+        self.status = "CANCELLED"
 
-    def get_reservation(self, res_id: int) -> Reservation:
-        if res_id not in self._reservations:
-            raise KeyError(f"Бронь {res_id} не найдена")
-        return self._reservations[res_id]
-
-    def get_all(self) -> list[Reservation]:
-        return list(self._reservations.values())
+    def __repr__(self):
+        return f"Бронь #{self.booking_id} ({self.guest_name}) | Комната #{self.room.room_id} | {self.check_in} - {self.check_out} | Питание: {self.board_type} | Сумма: {self.total_price} тг [{self.status}]"
