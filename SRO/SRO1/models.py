@@ -1,50 +1,46 @@
 from typing import Protocol
 
 
-class GradingPolicy(Protocol):
-    """Интерфейс политики расчета итогового балла."""
-    def calculate(self, scores: list[float]) -> float:
+class AvailabilityPolicy(Protocol):
+    """Интерфейс для проверки доступности бронирования"""
+    def check_availability(self, room: str, equipment: str) -> bool:
         ...
 
 
-class Student:
-    """Класс студента с инкапсулированными данными."""
-    def __init__(self, student_id: int, name: str) -> None:
-        if isinstance(student_id, bool) or not isinstance(student_id, int) or student_id <= 0:
-            raise ValueError("ID студента должен быть положительным целым числом")
-        if not name or not name.strip():
+class Reservation:
+    """Сущность заявки на бронирование"""
+    def __init__(self, res_id: int, student_name: str, room: str, equipment: str) -> None:
+        if isinstance(res_id, bool) or not isinstance(res_id, int) or res_id <= 0:
+            raise ValueError("ID брони должен быть положительным числом")
+        if not student_name or not student_name.strip():
             raise ValueError("Имя студента не может быть пустым")
 
-        self.student_id = student_id
-        self.name = name.strip()
-        self._scores: list[float] = []
-
-    def add_score(self, score: float) -> None:
-        if isinstance(score, bool) or not isinstance(score, (int, float)):
-            raise TypeError("Балл должен быть числом")
-        if not (0 <= score <= 100):
-            raise ValueError("Балл должен быть в диапазоне от 0 до 100")
-        self._scores.append(float(score))
-
-    def get_scores(self) -> list[float]:
-        return list(self._scores)  # Возвращаем копию для защиты состояния
+        self.res_id = res_id
+        self.student_name = student_name.strip()
+        self.room = room
+        self.equipment = equipment
 
 
-class GradeBook:
-    """Класс журнала успеваемости (Композиция с политикой оценивания)."""
-    def __init__(self, policy: GradingPolicy) -> None:
-        self._students: dict[int, Student] = {}
-        self.policy = policy  # Передача зависимости через конструктор
+class LaboratoryCalendar:
+    """Класс календаря бронирований (Композиция)"""
+    def __init__(self, policy: AvailabilityPolicy) -> None:
+        self._reservations: dict[int, Reservation] = {}
+        self.policy = policy  # Зависимость передается через конструктор
 
-    def add_student(self, student: Student) -> None:
-        if student.student_id in self._students:
-            raise ValueError(f"Студент с ID {student.student_id} уже существует")
-        self._students[student.student_id] = student
+    def add_reservation(self, reservation: Reservation) -> bool:
+        if reservation.res_id in self._reservations:
+            raise ValueError(f"Бронь с ID {reservation.res_id} уже существует")
+        
+        # Проверка через переданную политику
+        if self.policy.check_availability(reservation.room, reservation.equipment):
+            self._reservations[reservation.res_id] = reservation
+            return True
+        return False
 
-    def get_student(self, student_id: int) -> Student:
-        if student_id not in self._students:
-            raise KeyError(f"Студент с ID {student_id} не найден")
-        return self._students[student_id]
+    def get_reservation(self, res_id: int) -> Reservation:
+        if res_id not in self._reservations:
+            raise KeyError(f"Бронь {res_id} не найдена")
+        return self._reservations[res_id]
 
-    def get_all_students(self) -> list[Student]:
-        return list(self._students.values())
+    def get_all(self) -> list[Reservation]:
+        return list(self._reservations.values())
