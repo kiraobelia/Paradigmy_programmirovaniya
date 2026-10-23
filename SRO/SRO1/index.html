@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Система бронирования отеля</title>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@500;600&family=Cormorant+Garamond:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8dec9;--tx:#14110f;--card:#f4ecdb;--ln:#b9ad95;--ac:#b8442a;--mut:#5b5245;--ok:#4d6a2f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14110f;--tx:#e8dec9;--card:#1f1a16;--ln:#3a3128;--mut:#a89d88;--ok:#9bbf6a}}
+:root[data-theme="dark"]{--bg:#14110f;--tx:#e8dec9;--card:#1f1a16;--ln:#3a3128;--mut:#a89d88;--ok:#9bbf6a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:500 20px/1.35 'Cormorant Garamond',Georgia,serif}
+main{max-width:1180px;margin:0 auto;padding:32px 20px 64px}
+h1,h2{font-family:'Bodoni Moda',Georgia,serif;font-weight:600;margin:0}
+h1{font-size:clamp(34px,6vw,64px);color:var(--ac);line-height:1.05}
+h2{font-size:30px;margin:44px 0 16px}
+.lab,input,select,button,table,.mono{font-family:'JetBrains Mono',monospace}
+.lab{font-size:13px;letter-spacing:2px;color:var(--ac);margin:0 0 10px}
+.sub{color:var(--mut);font-size:22px;margin:10px 0 0}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:24px}
+label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mut)}
+input,select{padding:12px;font-size:15px;background:var(--card);color:var(--tx);border:1px solid var(--ln);border-radius:0}
+button{cursor:pointer;font-size:15px;padding:13px 22px;background:var(--ac);color:#f4ecdb;border:0}
+button.g{background:transparent;color:var(--tx);border:1px solid var(--ln);padding:6px 12px;font-size:13px}
+.rooms{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.room{background:var(--card);border:1px solid var(--ln);padding:16px;cursor:pointer}
+.room.sel{outline:3px solid var(--ac)}
+.room b{font:600 30px 'Bodoni Moda',serif;color:var(--ac)}
+.room p{margin:2px 0;font-size:18px}
+.st{font:500 13px 'JetBrains Mono',monospace;margin-top:8px!important}
+.free{color:var(--ok)}.busy{color:var(--ac)}
+#msg{margin-top:20px}
+.box{background:var(--card);border-left:6px solid var(--ac);padding:18px 22px;font-size:22px}
+.box.good{border-color:var(--ok)}
+.box button{margin:6px 8px 0 0}
+.wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{color:var(--ac);text-align:left;padding:10px;font-weight:500}
+td{padding:10px;border-top:1px solid var(--ln);white-space:nowrap}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:20px}
+.stats div{background:var(--card);border:1px solid var(--ln);padding:16px}
+.stats b{display:block;font:600 34px 'Bodoni Moda',serif;color:var(--ac)}
+</style></head><body><main>
+<p class="lab">МИНИ-ПРОЕКТ · ПАРАДИГМЫ ПРОГРАММИРОВАНИЯ</p>
+<h1>Система бронирования отеля</h1>
+<p class="sub">Керимбаева Карина, ТИИ-25-21. Введите даты, выберите номер и забронируйте.</p>
+
+<h2>Новое бронирование</h2>
+<div class="form">
+<label>ФИО гостя<input id="guest" placeholder="Керимбаева Карина"></label>
+<label>Дата заезда<input id="ci" placeholder="ДД.ММ.ГГГГ" value="01.11.2026"></label>
+<label>Дата выезда<input id="co" placeholder="ДД.ММ.ГГГГ" value="05.11.2026"></label>
+<label>Питание<select id="board"><option>Без питания</option><option>Завтрак</option><option>3-разовое</option></select></label>
+<label>Скидка, %<input id="disc" type="number" min="0" max="100" value="0"></label>
+</div>
+
+<h2>Номера</h2>
+<p class="sub" style="margin:0 0 16px">Статус показан на выбранные даты. Нажмите на карточку, чтобы выбрать номер.</p>
+<div class="rooms" id="rooms"></div>
+<p style="margin-top:20px"><button id="go">Забронировать выбранный номер</button></p>
+<div id="msg"></div>
+
+<h2>Все брони</h2>
+<div class="wrap"><table id="tbl"></table></div>
+<div class="stats" id="stats"></div>
+<p style="margin-top:28px"><button class="g" id="reset">Очистить все данные</button></p>
+</main>
+<script>
+const ROOMS=[[101,'Стандарт','Центральный','на улицу','раздельные',15000],[102,'Стандарт','Центральный','во двор','совместные',16000],[103,'Стандарт','Боковой','на улицу','совместные',14000],[104,'Стандарт','Боковой','во двор','раздельные',14500],[201,'Люкс','Центральный','на озеро','совместные',40000],[202,'Люкс','Центральный','на озеро','раздельные',38000],[203,'Люкс','Боковой','во двор','совместные',35000],[301,'Семейный','Центральный','на озеро','совместные',30000],[302,'Семейный','Боковой','во двор','раздельные',25000],[303,'Семейный','Боковой','на улицу','раздельные',24000]];
+const $=id=>document.getElementById(id), DAY=86400000;
+let bookings=[], sel=null;
+try{bookings=JSON.parse(localStorage.getItem('hotel_bookings')||'[]')}catch(e){}
+const save=()=>{try{localStorage.setItem('hotel_bookings',JSON.stringify(bookings))}catch(e){}};
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function parse(t){const m=/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})$/.exec(t.trim());if(!m)return null;const d=Date.UTC(+m[3],m[2]-1,+m[1]),x=new Date(d);return x.getUTCDate()==+m[1]&&x.getUTCMonth()==m[2]-1?d:null}
+const fmt=d=>{const x=new Date(d);return String(x.getUTCDate()).padStart(2,'0')+'.'+String(x.getUTCMonth()+1).padStart(2,'0')+'.'+x.getUTCFullYear()};
+const money=x=>Math.round(x).toLocaleString('ru-RU')+' тг';
+const overlap=(a1,b1,a2,b2)=>Math.max(a1,a2)<Math.min(b1,b2);
+const isFree=(id,s,e)=>!bookings.some(b=>b.status==='ok'&&b.room===id&&overlap(s,e,b.start,b.end));
+const nearest=(id,s,n,step=0)=>step>365?null:isFree(id,s+step*DAY,s+(step+n)*DAY)?[s+step*DAY,s+(step+n)*DAY]:nearest(id,s,n,step+1);
+const boardPrice=(base,board,n)=>(base+({'Завтрак':3000,'3-разовое':8000}[board]||0))*n;
+const makeDiscount=p=>a=>a*(1-p/100);
+const period=()=>{const s=parse($('ci').value),e=parse($('co').value);return s!==null&&e!==null&&e>s?[s,e]:null};
+const roomText=r=>`№${r[0]} · ${r[1]} · ${r[2]} корпус · вид ${r[3]} · ${money(r[5])}/ночь`;
+
+function render(){
+  const p=period();
+  $('rooms').innerHTML=ROOMS.map(r=>{
+    const st=p?(isFree(r[0],p[0],p[1])?'<p class="st free">● свободен</p>':'<p class="st busy">● ЗАНЯТ</p>'):'<p class="st">введите даты</p>';
+    return `<div class="room ${sel===r[0]?'sel':''}" data-id="${r[0]}"><b>${r[0]}</b><p>${r[1]}, ${r[2]} корпус</p><p>Вид ${r[3]}</p><p>Кровати: ${r[4]}</p><p>${money(r[5])}/ночь</p>${st}</div>`}).join('');
+  document.querySelectorAll('.room').forEach(el=>el.onclick=()=>{sel=+el.dataset.id;render()});
+  const rows=bookings.map(b=>`<tr><td>${b.id}</td><td>${esc(b.guest)}</td><td>${b.room}</td><td>${fmt(b.start)} – ${fmt(b.end)}</td><td>${b.board}</td><td>${money(b.total)}</td><td>${b.status==='ok'?'активна':'отменена'}</td><td>${b.status==='ok'?`<button class="g" data-c="${b.id}">Отменить</button>`:''}</td></tr>`).join('');
+  $('tbl').innerHTML='<tr><th>№</th><th>Гость</th><th>Номер</th><th>Даты</th><th>Питание</th><th>Сумма</th><th>Статус</th><th></th></tr>'+(rows||'<tr><td colspan="8">Броней пока нет.</td></tr>');
+  document.querySelectorAll('[data-c]').forEach(el=>el.onclick=()=>{bookings.find(b=>b.id==el.dataset.c).status='cancel';save();render()});
+  const act=bookings.filter(b=>b.status==='ok'),occ=new Set(act.map(b=>b.room)).size;
+  const revenue=act.map(b=>b.total).reduce((x,y)=>x+y,0);
+  $('stats').innerHTML=`<div><b>${occ} из ${ROOMS.length}</b>номеров занято</div><div><b>${(occ/ROOMS.length*100).toFixed(1)}%</b>загрузка отеля</div><div><b>${money(revenue)}</b>выручка</div>`;
+}
+function say(html,good){$('msg').innerHTML=`<div class="box ${good?'good':''}">${html}</div>`;document.querySelectorAll('[data-pick]').forEach(el=>el.onclick=()=>{sel=+el.dataset.pick;$('msg').innerHTML='';render()});document.querySelectorAll('[data-dates]').forEach(el=>el.onclick=()=>{const[a,b]=el.dataset.dates.split('|');$('ci').value=fmt(+a);$('co').value=fmt(+b);$('msg').innerHTML='';render()})}
+$('go').onclick=()=>{
+  const p=period();
+  if(!p)return say('Проверьте даты: формат ДД.ММ.ГГГГ, выезд должен быть позже заезда.');
+  if(sel===null)return say('Сначала выберите номер: нажмите на карточку.');
+  const r=ROOMS.find(x=>x[0]===sel),n=Math.round((p[1]-p[0])/DAY);
+  if(!isFree(sel,p[0],p[1])){
+    const near=nearest(sel,p[0],n),others=ROOMS.filter(x=>x[0]!==sel&&isFree(x[0],p[0],p[1]));
+    return say(`<b>Номер ${sel} ЗАНЯТ</b> на ${fmt(p[0])} – ${fmt(p[1])}.<br>`+(near?`Ближайшие свободные даты для него: <button class="g" data-dates="${near[0]}|${near[1]}">${fmt(near[0])} – ${fmt(near[1])}</button><br>`:'')+(others.length?'Свободные номера на ваши даты: '+others.map(x=>`<button class="g" data-pick="${x[0]}">№${x[0]} · ${x[1]}</button>`).join(''):'На ваши даты свободных номеров нет.'))}
+  const total=makeDiscount(+$('disc').value||0)(boardPrice(r[5],$('board').value,n));
+  const id=bookings.reduce((m,b)=>Math.max(m,b.id),0)+1;
+  bookings.push({id,guest:$('guest').value.trim()||'Гость',room:sel,start:p[0],end:p[1],board:$('board').value,total,status:'ok'});
+  save();render();say(`<b>Бронь №${id} создана.</b> Номер ${sel}, ${fmt(p[0])} – ${fmt(p[1])}, ${n} ноч. К оплате: ${money(total)}.`,true);
+};
+$('reset').onclick=()=>{bookings=[];sel=null;save();$('msg').innerHTML='';render()};
+['ci','co'].forEach(i=>$(i).oninput=render);
+render();
+</script></body></html>
